@@ -63,12 +63,43 @@ public class MainActivity extends AppCompatActivity {
         list.add("qarluq");
         list.add("qarluq");
 
-        abcMap.put("a", 5);
-        abcMap.put("n", 0);
-        abcMap.put("s", 12);
-        abcMap.put("p", 16);
-        abcMap.put("e", 22);
-        abcMap.put("q", 27);
+//        abcMap.put("a", 5);
+//        abcMap.put("n", 0);
+//        abcMap.put("s", 12);
+//        abcMap.put("p", 16);
+//        abcMap.put("e", 22);
+//        abcMap.put("q", 27);
+
+
+        abcMap.put("A", 5);
+        abcMap.put("B", 5);
+        abcMap.put("C", 5);
+        abcMap.put("D", 5);
+        abcMap.put("E", 22);
+        abcMap.put("F", 5);
+        abcMap.put("G", 5);
+        abcMap.put("H", 5);
+        abcMap.put("I", 5);
+        abcMap.put("J", 5);
+        abcMap.put("K", 5);
+        abcMap.put("L", 5);
+        abcMap.put("M", 5);
+        abcMap.put("N", 0);
+        abcMap.put("O", 5);
+        abcMap.put("P", 16);
+        abcMap.put("Q", 27);
+        abcMap.put("R", 27);
+        abcMap.put("S", 12);
+        abcMap.put("T", 12);
+        abcMap.put("U", 12);
+        abcMap.put("V", 12);
+        abcMap.put("W", 12);
+        abcMap.put("X", 12);
+        abcMap.put("Y", 12);
+        abcMap.put("Z", 12);
+
+
+
         adapter = new MyAdapter(this, list);
         LinearLayoutManager manager=new LinearLayoutManager(this);
         manager.setOrientation(LinearLayoutManager.VERTICAL);

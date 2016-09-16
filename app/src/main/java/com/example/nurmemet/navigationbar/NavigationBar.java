@@ -1,11 +1,16 @@
 package com.example.nurmemet.navigationbar;
 
+import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.RoundRectShape;
 import android.os.Build;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,11 +18,13 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
+import android.view.animation.LinearInterpolator;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,7 +52,7 @@ public class NavigationBar extends RelativeLayout {
     /**
      * 以dp为单位
      */
-    private final static int navigationWidth = 35;
+    private final static int navigationWidth = 25;
     /**
      * 以dp为单位
      */
@@ -54,6 +61,33 @@ public class NavigationBar extends RelativeLayout {
      * 以dp为单位
      */
     private final static int navigationItemHeight = 40;
+    private final static int navigationMaxAlpha=127;
+
+    private int mLetterItemHeight;
+    private int mToastViewSize;
+    private int mNavigationWidth;
+    /**
+     * 以sp为单位
+     */
+    private int mNavigationItemTextSize=12;
+    /**
+     * 以sp为单位
+     */
+    private int mToastViewTextSize=30;
+    private ColorDrawable mNavigationBackground;
+
+    public void setToastViewSiz(int mToastViewSiz) {
+        this.mToastViewSize = mToastViewSiz;
+    }
+
+    public void setNavigationWidth(int mNavigationWidth) {
+        this.mNavigationWidth = mNavigationWidth;
+    }
+
+    public void setLetterItemHeight(int mLetterItemHeight) {
+        this.mLetterItemHeight = mLetterItemHeight;
+    }
+
 
     public NavigationBar(Context context) {
         super(context);
@@ -78,6 +112,13 @@ public class NavigationBar extends RelativeLayout {
 
     private void init() {
         setBackgroundColor(Color.TRANSPARENT);
+        mLetterItemHeight = dp2px(getContext(), navigationItemHeight);
+        mNavigationWidth = dp2px(getContext(), navigationWidth);
+        mToastViewSize = dp2px(getContext(), toastViewSize);
+        mNavigationBackground = new ColorDrawable(Color.GRAY);
+        mNavigationBackground.setAlpha(0);
+
+
     }
 
     public void setAbcMap(Map<String, Integer> map) {
@@ -91,31 +132,35 @@ public class NavigationBar extends RelativeLayout {
 
         if (set != null && !set.isEmpty()) {
             abcList = new ArrayList<>(set);
+            Collections.sort(abcList);
         } else {
             abcList = new ArrayList<>();
         }
         if (!abcList.isEmpty()) {
             toastView = new TextView(getContext());
             RelativeLayout.LayoutParams toastParam = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            toastParam.width=dp2px(getContext(),toastViewSize);
-            toastParam.height=toastParam.width;
+            toastParam.width = mToastViewSize;
+            toastParam.height = toastParam.width;
             toastParam.addRule(CENTER_IN_PARENT);
-            toastView.setBackgroundColor(getBackgroundColor());
+            toastView.setBackground(getToastViewBackground());
             toastView.setLayoutParams(toastParam);
-            toastView.setTextColor(Color.BLACK);
-            toastView.setTextSize(30);
+            toastView.setTextColor(Color.WHITE);
+            toastView.setTextSize(mToastViewTextSize);
             toastView.setGravity(Gravity.CENTER);
-            toastView.setPadding(0,0,0,0);
+            toastView.setPadding(0, 0, 0, 0);
+            toastView.setAlpha(0.0F);
+            toastView.setText(abcList.get(0));
             addView(toastView);
             navigationContainer = new LinearLayout(getContext());
             navigationContainer.setOrientation(LinearLayout.VERTICAL);
-            RelativeLayout.LayoutParams param = new RelativeLayout.LayoutParams(getNavigationWidth(), LayoutParams.WRAP_CONTENT);
+            RelativeLayout.LayoutParams param = new RelativeLayout.LayoutParams(mNavigationWidth, LayoutParams.WRAP_CONTENT);
             param.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
             param.addRule(RelativeLayout.CENTER_VERTICAL);
             navigationContainer.setLayoutParams(param);
             for (int i = 0; i < abcList.size(); i++) {
                 navigationContainer.addView(getTextView(abcList.get(i)));
             }
+            navigationContainer.setBackground(mNavigationBackground);
             addView(navigationContainer);
 
         }
@@ -129,20 +174,37 @@ public class NavigationBar extends RelativeLayout {
         updateChildRect();
     }
 
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        if (navigationContainer != null) {
+            int parentHeight = getMeasuredHeight();
+            if (parentHeight < abcList.size() * mLetterItemHeight) {
+                int height = parentHeight / abcList.size();
+                int specWidth = MeasureSpec.makeMeasureSpec(mNavigationWidth, MeasureSpec.EXACTLY);
+                int specHeight = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
+                for (int i = 0; i < abcList.size(); i++) {
+                    navigationContainer.getChildAt(i).measure(specWidth, specHeight);
+                }
+            }
+        }
+    }
+
     private void updateChildRect() {
-        childRect.left = navigationContainer.getRight() - dp2px(getContext(), navigationWidth);
+        childRect.left = navigationContainer.getRight() - mNavigationWidth;
         childRect.top = navigationContainer.getPaddingTop() + navigationContainer.getTop();
-        childRect.bottom = abcList.size() * dp2px(getContext(), navigationItemHeight) + navigationContainer.getPaddingTop() + navigationContainer.getTop();
+        childRect.bottom = abcList.size() * mLetterItemHeight + navigationContainer.getPaddingTop() + navigationContainer.getTop();
         childRect.right = navigationContainer.getRight();
     }
 
     private TextView getTextView(String s) {
         TextView label = new TextView(getContext());
-        label.setBackgroundColor(getBackgroundColor());
+        label.setBackgroundColor(Color.TRANSPARENT);
+        label.setTextSize(mNavigationItemTextSize);
         label.setText(s);
         label.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams param = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        param.height = dp2px(getContext(), navigationItemHeight);
+        param.height = mLetterItemHeight;
         label.setLayoutParams(param);
         return label;
 
@@ -153,33 +215,70 @@ public class NavigationBar extends RelativeLayout {
     }
 
 
-    public int getNavigationWidth() {
-        return dp2px(getContext(), navigationWidth);
-    }
-
-    public int getToastViewPadding() {
-        return dp2px(getContext(), toastViewSize);
-    }
-
     private int dp2px(Context context, int dpValue) {
         final float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dpValue * scale + 0.5f);
     }
 
     @Override
+    public boolean onInterceptHoverEvent(MotionEvent event) {
+
+        final float x = event.getX();
+        final float y = event.getY();
+        if (!childRect.contains(x, y)) {
+            return super.onInterceptHoverEvent(event);
+        }
+        return true;
+    }
+
+    private void bacgroundIn() {
+        final ValueAnimator anim = ValueAnimator.ofInt(0, navigationMaxAlpha);
+        anim.setInterpolator(new LinearInterpolator());
+        anim.setDuration(300);
+        anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                Integer value = (Integer) animation.getAnimatedValue();
+                mNavigationBackground.setAlpha(value.intValue());
+
+            }
+        });
+        anim.start();
+        toastView.animate().alpha(1.0F).setDuration(500).start();
+    }
+
+    private void backgroundOut() {
+        final ValueAnimator anim = ValueAnimator.ofInt(navigationMaxAlpha, 0);
+        anim.setInterpolator(new LinearInterpolator());
+        anim.setDuration(300);
+        anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                Integer value = (Integer) animation.getAnimatedValue();
+                mNavigationBackground.setAlpha(value.intValue());
+
+            }
+        });
+        anim.start();
+        toastView.animate().alpha(0.0F).setDuration(500).start();
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent event) {
 
-        float x = event.getX();
-        float y = event.getY();
-        if (!childRect.contains(x, y)) {
-            return false;
-        }
+        final float x = event.getX();
+        final float y = event.getY();
+
         int pos = -1;
         String letter;
         int adapterPos;
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN: {
-                pos = (int) (y - navigationContainer.getPaddingTop() - navigationContainer.getTop()) / dp2px(getContext(), navigationItemHeight);
+                if (!childRect.contains(x, y)) {
+                    return false;
+                }
+                bacgroundIn();
+                pos = (int) (y - navigationContainer.getPaddingTop() - navigationContainer.getTop()) / mLetterItemHeight;
                 position = pos;
                 letter = abcList.get(position);
                 adapterPos = abcMap.get(letter);
@@ -189,8 +288,8 @@ public class NavigationBar extends RelativeLayout {
 
             break;
             case MotionEvent.ACTION_MOVE:
-                pos = (int) (y - navigationContainer.getPaddingTop() - navigationContainer.getTop()) / dp2px(getContext(), navigationItemHeight);
-                System.out.println("pos="+pos);
+                pos = (int) (y - navigationContainer.getPaddingTop() - navigationContainer.getTop()) / mLetterItemHeight;
+                System.out.println("pos=" + pos);
                 if (pos != position) {
                     letter = abcList.get(pos);
                     adapterPos = abcMap.get(letter);
@@ -201,6 +300,7 @@ public class NavigationBar extends RelativeLayout {
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
+                backgroundOut();
                 position = -1;
                 break;
             default:
@@ -212,9 +312,9 @@ public class NavigationBar extends RelativeLayout {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
-        p.setColor(Color.RED);
-        canvas.drawRect(childRect, p);
+//        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+//        p.setColor(Color.RED);
+//        canvas.drawRect(childRect, p);
     }
 
 
@@ -228,29 +328,19 @@ public class NavigationBar extends RelativeLayout {
             int top = recyclerView.getChildAt(index - firstPosition).getTop();
             recyclerView.scrollBy(0, top);
         } else {
-            manager.scrollToPositionWithOffset(index,0);
+            manager.scrollToPositionWithOffset(index, 0);
         }
+    }
+    private Drawable getToastViewBackground(){
+        RoundRectShape shape=new RoundRectShape(new float[]{16,16,16,16,16,16,16,16},null,null);
+        ShapeDrawable shapeDrawable=new ShapeDrawable(shape);
+        Paint p=shapeDrawable.getPaint();
+        p.setColor(Color.BLACK);
+        p.setAlpha(navigationMaxAlpha);
+        p.setStyle(Paint.Style.FILL);
+        ;
+        return shapeDrawable;
     }
 
 
-    private class MyLinearLayoutManager extends LinearLayoutManager{
-
-        public MyLinearLayoutManager(Context context) {
-            super(context);
-        }
-
-        public MyLinearLayoutManager(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-            super(context, attrs, defStyleAttr, defStyleRes);
-        }
-
-        public MyLinearLayoutManager(Context context, int orientation, boolean reverseLayout) {
-            super(context, orientation, reverseLayout);
-        }
-
-
-        @Override
-        public void scrollToPosition(int position) {
-            super.scrollToPosition(position);
-        }
-    }
 }
