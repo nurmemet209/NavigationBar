@@ -220,16 +220,16 @@ public class NavigationBar extends RelativeLayout {
         return (int) (dpValue * scale + 0.5f);
     }
 
-    @Override
-    public boolean onInterceptHoverEvent(MotionEvent event) {
-
-        final float x = event.getX();
-        final float y = event.getY();
-        if (!childRect.contains(x, y)) {
-            return super.onInterceptHoverEvent(event);
-        }
-        return true;
-    }
+//    @Override
+//    public boolean onInterceptHoverEvent(MotionEvent event) {
+//
+//        final float x = event.getX();
+//        final float y = event.getY();
+//        if (!childRect.contains(x, y)) {
+//            return super.onInterceptHoverEvent(event);
+//        }
+//        return true;
+//    }
 
     private void bacgroundIn() {
         final ValueAnimator anim = ValueAnimator.ofInt(0, navigationMaxAlpha);
@@ -278,7 +278,7 @@ public class NavigationBar extends RelativeLayout {
                     return false;
                 }
                 bacgroundIn();
-                pos = (int) (y - navigationContainer.getPaddingTop() - navigationContainer.getTop()) / mLetterItemHeight;
+                pos = (int) (y - navigationContainer.getPaddingTop() - navigationContainer.getTop()) / getLetterHeight();
                 position = pos;
                 letter = abcList.get(position);
                 adapterPos = abcMap.get(letter);
@@ -288,7 +288,7 @@ public class NavigationBar extends RelativeLayout {
 
             break;
             case MotionEvent.ACTION_MOVE:
-                pos = (int) (y - navigationContainer.getPaddingTop() - navigationContainer.getTop()) / mLetterItemHeight;
+                pos = (int) (y - navigationContainer.getPaddingTop() - navigationContainer.getTop()) / getLetterHeight();
                 System.out.println("pos=" + pos);
                 if (pos != position) {
                     letter = abcList.get(pos);
@@ -315,6 +315,13 @@ public class NavigationBar extends RelativeLayout {
 //        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
 //        p.setColor(Color.RED);
 //        canvas.drawRect(childRect, p);
+    }
+
+    private int getLetterHeight(){
+        if (navigationContainer.getHeight()<abcList.size() * mLetterItemHeight){
+            return navigationContainer.getHeight()/abcList.size();
+        }
+        return mLetterItemHeight;
     }
 
 

@@ -10,8 +10,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.github.promeg.pinyinhelper.Pinyin;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,78 +33,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         recyclerView = (RecyclerView) findViewById(R.id.recycle_view);
         navigationBar = (NavigationBar) findViewById(R.id.navigation_view);
-        list.add("nurmememt");
-        list.add("nurmememt");
-        list.add("nurmememt");
-        list.add("nurmememt");
-        list.add("nurmememt");
-        list.add("alim");
-        list.add("alim");
-        list.add("alim");
-        list.add("alim");
-        list.add("alim");
-        list.add("alim");
-        list.add("alim");
-        list.add("samat");
-        list.add("samat");
-        list.add("samat");
-        list.add("samat");
-        list.add("pahirdin");
-        list.add("pahirdin");
-        list.add("pahirdin");
-        list.add("pahirdin");
-        list.add("pahirdin");
-        list.add("pahirdin");
-        list.add("erqal");
-        list.add("erqal");
-        list.add("erqal");
-        list.add("erqal");
-        list.add("erqal");
-        list.add("qarluq");
-        list.add("qarluq");
-        list.add("qarluq");
-        list.add("qarluq");
-        list.add("qarluq");
 
-//        abcMap.put("a", 5);
-//        abcMap.put("n", 0);
-//        abcMap.put("s", 12);
-//        abcMap.put("p", 16);
-//        abcMap.put("e", 22);
-//        abcMap.put("q", 27);
-
-
-        abcMap.put("A", 5);
-        abcMap.put("B", 5);
-        abcMap.put("C", 5);
-        abcMap.put("D", 5);
-        abcMap.put("E", 22);
-        abcMap.put("F", 5);
-        abcMap.put("G", 5);
-        abcMap.put("H", 5);
-        abcMap.put("I", 5);
-        abcMap.put("J", 5);
-        abcMap.put("K", 5);
-        abcMap.put("L", 5);
-        abcMap.put("M", 5);
-        abcMap.put("N", 0);
-        abcMap.put("O", 5);
-        abcMap.put("P", 16);
-        abcMap.put("Q", 27);
-        abcMap.put("R", 27);
-        abcMap.put("S", 12);
-        abcMap.put("T", 12);
-        abcMap.put("U", 12);
-        abcMap.put("V", 12);
-        abcMap.put("W", 12);
-        abcMap.put("X", 12);
-        abcMap.put("Y", 12);
-        abcMap.put("Z", 12);
-
-
-
+        abcMap= createMap();
         adapter = new MyAdapter(this, list);
-        LinearLayoutManager manager=new LinearLayoutManager(this);
+        LinearLayoutManager manager = new LinearLayoutManager(this);
         manager.setOrientation(LinearLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(manager);
         recyclerView.setAdapter(adapter);
@@ -146,6 +81,42 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private List<String> getList() {
+        List<String> l = new ArrayList<>();
+        Collections.addAll(l, stringCitys);
+        return l;
+    }
+    private Map<String,Integer> createMap(){
+        Map<String,Integer> map=new HashMap<>();
+
+        List<String> l=getList();
+        List<String> abcList=new ArrayList<>();
+        for (int i = 0; i <l.size() ; i++) {
+            abcList.add(transformPinYin(l.get(i)));
+            String name=l.get(i);
+            name=String.valueOf(abcList.get(i).charAt(0))+name;
+            l.remove(i);
+            l.add(i,name);
+        }
+       list.addAll(l);
+        Collections.sort(list);
+        for (int i = 0; i <list.size() ; i++) {
+            String a=String.valueOf(list.get(i).charAt(0));
+            if (!map.containsKey(a)){
+                map.put(a,i);
+            }
+            String name=list.get(i);
+            name=name.replace(a,"");
+            list.remove(i);
+            list.add(i,name);
+        }
+
+        return map;
+    }
+
+
+
+
 
     public static String[] stringCitys = new String[]{
             "合肥", "张家界", "宿州", "淮北", "阜阳", "蚌埠", "淮南", "滁州",
@@ -160,4 +131,12 @@ public class MainActivity extends AppCompatActivity {
             "复兴", "高领", "共兴", "柯家寨", "匹克", "匹夫", "旗舰", "启航",
             "如阳", "如果", "科比", "韦德", "诺维斯基", "麦迪", "乔丹", "姚明"
     };
+
+    public String transformPinYin(String character) {
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < character.length(); i++) {
+            buffer.append(Pinyin.toPinyin(character.charAt(i)));
+        }
+        return buffer.toString();
+    }
 }
